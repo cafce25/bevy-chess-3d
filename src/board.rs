@@ -8,24 +8,36 @@ pub fn create_board(
 ) {
     // Add meshes and materials
     let mesh = meshes.add(Mesh::from(shape::Plane { size: 1.0 }));
-    let white_material = materials.add(Color::rgb(1.0, 0.9, 0.9).into());
-    let black_material = materials.add(Color::rgb(0.0, 0.1, 0.1).into());
 
     // Spawn 64 squares {
-    for i in 0..8 {
-        for j in 0..8 {
+    for x in 0..8 {
+        for y in 0..8 {
+            let square = Square { x, y };
             commands
                 .spawn_bundle(PbrBundle {
                     mesh: mesh.clone(),
-                    material: if (i + j) % 2 == 0 {
-                        black_material.clone()
+                    material: if square.is_light(){
+                        materials.add(Color::rgb(1.0, 0.9, 0.9).into())
                     } else {
-                        white_material.clone()
+                        materials.add(Color::rgb(0.0, 0.1, 0.1).into())
                     },
-                    transform: Transform::from_translation(Vec3::new(i as f32, 0.0, j as f32)),
+                    transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
                     ..Default::default()
                 })
-                .insert_bundle(PickableBundle::default());
+                .insert_bundle(PickableBundle::default())
+                .insert(square);
         }
+    }
+}
+
+#[derive(Component)]
+pub struct Square {
+    pub x: u8,
+    pub y: u8,
+}
+
+impl Square {
+    pub fn is_light(&self) -> bool {
+        (self.x + self.y) % 2 == 1
     }
 }

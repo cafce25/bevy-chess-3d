@@ -1,15 +1,15 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{
-    DebugCursorPickingPlugin, HighlightablePickingPlugin, InteractablePickingPlugin,
-    PickableBundle, PickingCameraBundle, PickingPlugin,
+    DebugCursorPickingPlugin, DefaultPickingPlugins, Hover, PickingCameraBundle, Selection,
 };
+use board::Square;
 
-mod pieces;
 mod board;
+mod pieces;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugin(PickingPlugin)
+        .add_plugin(DefaultPickingPlugins)
         .add_plugin(DebugCursorPickingPlugin)
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(WindowDescriptor {
@@ -21,6 +21,7 @@ fn main() {
         .add_startup_system(setup)
         .add_startup_system(board::create_board)
         .add_startup_system(pieces::create_pieces)
+        .add_system(color_squares)
         .run();
 }
 
@@ -42,3 +43,23 @@ fn setup(mut commands: Commands) {
     });
 }
 
+fn color_squares(
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    query: Query<(&Square, &Selection, &Hover, &Handle<StandardMaterial>)>,
+) {
+    for (square, selection, hover, material_handle) in query.iter() {
+        // Get the actual material
+        let material = materials.get_mut(material_handle).unwrap();
+
+        // Change the material color
+        material.base_color = if hover.hovered() {
+            Color::rgb(0.7, 0.3, 0.3)
+        } else if selection.selected() {
+            Color::rgb(0.9, 0.1, 0.1)
+        } else if square.is_light() {
+            Color::rgb(1.0, 0.9, 0.9)
+        } else {
+            Color::rgb(0.0, 0.1, 0.1)
+        };
+    }
+}
