@@ -24,128 +24,146 @@ pub fn create_pieces(
         asset_server.load("models/chess/kit/pieces.glb#Mesh7/Primitive0");
 
     // Add some materials
-    let white_material = materials.add(Color::rgb(1.0, 0.9, 0.9).into());
-    let black_material = materials.add(Color::rgb(0.0, 0.1, 0.1).into());
+    let light_material = materials.add(Color::rgb(1.0, 0.9, 0.9).into());
+    let dark_material = materials.add(Color::rgb(0.0, 0.1, 0.1).into());
 
     spawn_rook(
         &mut commands,
-        white_material.clone(),
+        light_material.clone(),
+        PieceColor::Light,
         rook_handle.clone(),
-        Vec3::new(0.0, 0.0, 0.0),
+        (0, 0),
     );
     spawn_knight(
         &mut commands,
-        white_material.clone(),
+        light_material.clone(),
+        PieceColor::Light,
         knight_1_handle.clone(),
         knight_2_handle.clone(),
-        Vec3::new(0.0, 0.0, 1.0),
+        (0, 1),
     );
     spawn_bishop(
         &mut commands,
-        white_material.clone(),
+        light_material.clone(),
+        PieceColor::Light,
         bishop_handle.clone(),
-        Vec3::new(0.0, 0.0, 2.0),
+        (0, 2),
     );
     spawn_queen(
         &mut commands,
-        white_material.clone(),
+        light_material.clone(),
+        PieceColor::Light,
         queen_handle.clone(),
-        Vec3::new(0.0, 0.0, 3.0),
+        (0, 3),
     );
     spawn_king(
         &mut commands,
-        white_material.clone(),
+        light_material.clone(),
+        PieceColor::Light,
         king_handle.clone(),
         king_cross_handle.clone(),
-        Vec3::new(0.0, 0.0, 4.0),
+        (0, 4),
     );
     spawn_bishop(
         &mut commands,
-        white_material.clone(),
+        light_material.clone(),
+        PieceColor::Light,
         bishop_handle.clone(),
-        Vec3::new(0.0, 0.0, 5.0),
+        (0, 5),
     );
     spawn_knight(
         &mut commands,
-        white_material.clone(),
+        light_material.clone(),
+        PieceColor::Light,
         knight_1_handle.clone(),
         knight_2_handle.clone(),
-        Vec3::new(0.0, 0.0, 6.0),
+        (0, 6),
     );
     spawn_rook(
         &mut commands,
-        white_material.clone(),
+        light_material.clone(),
+        PieceColor::Light,
         rook_handle.clone(),
-        Vec3::new(0.0, 0.0, 7.0),
+        (0, 7),
     );
 
     for i in 0..8 {
         spawn_pawn(
             &mut commands,
-            white_material.clone(),
+            light_material.clone(),
+            PieceColor::Light,
             pawn_handle.clone(),
-            Vec3::new(1.0, 0.0, i as f32),
+            (1, i),
         );
     }
 
     spawn_rook(
         &mut commands,
-        black_material.clone(),
+        dark_material.clone(),
+        PieceColor::Dark,
         rook_handle.clone(),
-        Vec3::new(7.0, 0.0, 0.0),
+        (7, 0),
     );
     spawn_knight(
         &mut commands,
-        black_material.clone(),
+        dark_material.clone(),
+        PieceColor::Dark,
         knight_1_handle.clone(),
         knight_2_handle.clone(),
-        Vec3::new(7.0, 0.0, 1.0),
+        (7, 1),
     );
     spawn_bishop(
         &mut commands,
-        black_material.clone(),
+        dark_material.clone(),
+        PieceColor::Dark,
         bishop_handle.clone(),
-        Vec3::new(7.0, 0.0, 2.0),
+        (7, 2),
     );
     spawn_queen(
         &mut commands,
-        black_material.clone(),
+        dark_material.clone(),
+        PieceColor::Dark,
         queen_handle.clone(),
-        Vec3::new(7.0, 0.0, 3.0),
+        (7, 3),
     );
     spawn_king(
         &mut commands,
-        black_material.clone(),
+        dark_material.clone(),
+        PieceColor::Dark,
         king_handle.clone(),
         king_cross_handle.clone(),
-        Vec3::new(7.0, 0.0, 4.0),
+        (7, 4),
     );
     spawn_bishop(
         &mut commands,
-        black_material.clone(),
+        dark_material.clone(),
+        PieceColor::Dark,
         bishop_handle.clone(),
-        Vec3::new(7.0, 0.0, 5.0),
+        (7, 5),
     );
     spawn_knight(
         &mut commands,
-        black_material.clone(),
+        dark_material.clone(),
+        PieceColor::Dark,
         knight_1_handle.clone(),
         knight_2_handle.clone(),
-        Vec3::new(7.0, 0.0, 6.0),
+        (7, 6),
     );
     spawn_rook(
         &mut commands,
-        black_material.clone(),
+        dark_material.clone(),
+        PieceColor::Dark,
         rook_handle.clone(),
-        Vec3::new(7.0, 0.0, 7.0),
+        (7, 7),
     );
 
     for i in 0..8 {
         spawn_pawn(
             &mut commands,
-            black_material.clone(),
+            dark_material.clone(),
+            PieceColor::Dark,
             pawn_handle.clone(),
-            Vec3::new(6.0, 0.0, i as f32),
+            (6, i),
         );
     }
 }
@@ -153,14 +171,21 @@ pub fn create_pieces(
 fn spawn_king(
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
+    piece_color: PieceColor,
     mesh: Handle<Mesh>,
     mesh_cross: Handle<Mesh>,
-    position: Vec3,
+    (x, y): (u8, u8),
 ) {
     commands
         .spawn_bundle(PbrBundle {
-            transform: Transform::from_translation(position),
+            transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
             ..Default::default()
+        })
+        .insert(Piece {
+            color: piece_color,
+            piece_type: PieceType::King,
+            x,
+            y,
         })
         .with_children(|parent| {
             parent.spawn_bundle(PbrBundle {
@@ -189,14 +214,21 @@ fn spawn_king(
 fn spawn_knight(
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
+    piece_color: PieceColor,
     mesh_1: Handle<Mesh>,
     mesh_2: Handle<Mesh>,
-    position: Vec3,
+    (x, y): (u8, u8),
 ) {
     commands
         .spawn_bundle(PbrBundle {
-            transform: Transform::from_translation(position),
+            transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
             ..Default::default()
+        })
+        .insert(Piece {
+            color: piece_color,
+            piece_type: PieceType::Knight,
+            x,
+            y,
         })
         .with_children(|parent| {
             parent.spawn_bundle(PbrBundle {
@@ -225,13 +257,20 @@ fn spawn_knight(
 fn spawn_queen(
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
+    piece_color: PieceColor,
     mesh: Handle<Mesh>,
-    position: Vec3,
+    (x, y): (u8, u8),
 ) {
     commands
         .spawn_bundle(PbrBundle {
-            transform: Transform::from_translation(position),
+            transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
             ..Default::default()
+        })
+        .insert(Piece {
+            color: piece_color,
+            piece_type: PieceType::Queen,
+            x,
+            y,
         })
         .with_children(|parent| {
             parent.spawn_bundle(PbrBundle {
@@ -250,13 +289,20 @@ fn spawn_queen(
 fn spawn_bishop(
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
+    piece_color: PieceColor,
     mesh: Handle<Mesh>,
-    position: Vec3,
+    (x, y): (u8, u8),
 ) {
     commands
         .spawn_bundle(PbrBundle {
-            transform: Transform::from_translation(position),
+            transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
             ..Default::default()
+        })
+        .insert(Piece {
+            color: piece_color,
+            piece_type: PieceType::Bishop,
+            x,
+            y,
         })
         .with_children(|parent| {
             parent.spawn_bundle(PbrBundle {
@@ -275,13 +321,20 @@ fn spawn_bishop(
 fn spawn_rook(
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
+    piece_color: PieceColor,
     mesh: Handle<Mesh>,
-    position: Vec3,
+    (x, y): (u8, u8),
 ) {
     commands
         .spawn_bundle(PbrBundle {
-            transform: Transform::from_translation(position),
+            transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
             ..Default::default()
+        })
+        .insert(Piece {
+            color: piece_color,
+            piece_type: PieceType::Rook,
+            x,
+            y,
         })
         .with_children(|parent| {
             parent.spawn_bundle(PbrBundle {
@@ -300,13 +353,20 @@ fn spawn_rook(
 fn spawn_pawn(
     commands: &mut Commands,
     material: Handle<StandardMaterial>,
+    piece_color: PieceColor,
     mesh: Handle<Mesh>,
-    position: Vec3,
+    (x, y): (u8, u8),
 ) {
     commands
         .spawn_bundle(PbrBundle {
-            transform: Transform::from_translation(position),
+            transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
             ..Default::default()
+        })
+        .insert(Piece {
+            color: piece_color,
+            piece_type: PieceType::Pawn,
+            x,
+            y,
         })
         .with_children(|parent| {
             parent.spawn_bundle(PbrBundle {
@@ -322,3 +382,26 @@ fn spawn_pawn(
         });
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum PieceColor {
+    Light,
+    Dark,
+}
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum PieceType {
+    King,
+    Queen,
+    Bishop,
+    Knight,
+    Rook,
+    Pawn,
+}
+
+#[derive(Component, Clone, Copy)]
+pub struct Piece {
+    pub color: PieceColor,
+    pub piece_type: PieceType,
+    pub x: u8,
+    pub y: u8,
+}
