@@ -408,6 +408,15 @@ pub enum PieceColor {
     Dark,
 }
 
+impl std::fmt::Display for PieceColor {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PieceColor::Light => f.write_str("White"),
+            PieceColor::Dark => f.write_str("Black"),
+        }
+    }
+}
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum PieceType {
     King,

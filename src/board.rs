@@ -1,7 +1,7 @@
-use bevy::prelude::*;
+use bevy::{prelude::*, app::{Events, AppExit}};
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
 
-use crate::pieces::{Piece, PieceColor};
+use crate::pieces::{Piece, PieceColor, PieceType};
 
 pub struct BoardPlugin;
 impl Plugin for BoardPlugin {
@@ -52,6 +52,7 @@ fn select_square(
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_piece: ResMut<SelectedPiece>,
     mut turn: ResMut<PlayerTurn>,
+    mut app_exit_events: ResMut<Events<AppExit>>,
     mut squares: Query<(&Square, &mut Selection)>,
     mut pieces: Query<(Entity, &mut Piece)>,
 ) {
@@ -74,13 +75,21 @@ fn select_square(
             // Move the selected piece to the selected square
             if let Ok((_entity, mut piece)) = pieces.get_mut(selected_piece_entity) {
                 if piece.is_move_valid((square.x, square.y), pieces_vec) {
-                    if let Some((entity, _piece)) =
+                    if let Some((entity, other_piece)) =
                         pieces_entity_vec.into_iter().find(|(_, target_piece)| {
                             target_piece.x == square.x && target_piece.y == square.y
                         })
                     {
                         // Despawn piece and it's children
                         commands.entity(entity).despawn_recursive();
+
+                        // TODO: detect check and mate
+                        // If the king is taken, we should exit
+
+                        if other_piece.piece_type == PieceType::King {
+                            println!("{} won! Thanks for playing!", turn.0);
+                            app_exit_events.send(AppExit);
+                        }
                     }
                     piece.x = square.x;
                     piece.y = square.y;
