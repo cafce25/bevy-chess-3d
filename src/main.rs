@@ -78,6 +78,7 @@ fn select_square(
         return;
     }
 
+    let pieces_vec = pieces.iter().map(|(_, piece)| *piece).collect();
     // Get the selected square
     let selected_square = squares
         .iter()
@@ -86,8 +87,10 @@ fn select_square(
         if let Some(selected_piece_entity) = selected_piece.entity {
             // Move the selected piece to the selected square
             if let Ok((_entity, mut piece)) = pieces.get_mut(selected_piece_entity) {
-                piece.x = square.x;
-                piece.y = square.y;
+                if piece.is_move_valid((square.x, square.y), pieces_vec) {
+                    piece.x = square.x;
+                    piece.y = square.y;
+                }
             }
             selected_piece.entity = None;
         } else {

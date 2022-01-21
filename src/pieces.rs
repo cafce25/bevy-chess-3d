@@ -425,3 +425,155 @@ pub struct Piece {
     pub x: u8,
     pub y: u8,
 }
+
+impl Piece {
+    /// Returns whether the move is valid
+    pub fn is_move_valid(&self, new_pos @ (x, y): (u8, u8), pieces: Vec<Piece>) -> bool {
+        // TODO en passant, castling
+        // If there's a piece of the same color in the same square, it can't move
+        let color_of_new = color_of_square(new_pos, &pieces);
+        if color_of_new == Some(self.color) {
+            return false;
+        }
+
+        let pos = (self.x, self.y);
+        let x_diff = self.x.abs_diff(x);
+        let y_diff = self.y.abs_diff(y);
+        let is_path_empty = is_path_empty(pos, new_pos, &pieces);
+        match self.piece_type {
+            PieceType::King => {
+                // Horizontal
+                x_diff == 1 && self.y == y
+                    // Vertical
+                    || y_diff == 1 && self.x == x
+                    // Diagonal
+                    || x_diff == 1 && y_diff == 1
+            }
+            PieceType::Queen => {
+                is_path_empty
+                    && (x_diff == y_diff
+                        || (self.x == x && self.y != y)
+                        || (self.y == y && self.x != x))
+            }
+            PieceType::Bishop => is_path_empty && x_diff == y_diff,
+            PieceType::Knight => x_diff == 2 && y_diff == 1 || y_diff == 2 && x_diff == 1,
+            PieceType::Rook => {
+                is_path_empty && (self.y == y && self.x != x || self.x == x && self.y != y)
+            }
+            PieceType::Pawn => {
+                match self.color {
+                    PieceColor::Light => {
+                        // Has to move forward
+                        if x <= self.x {
+                            return false;
+                        }
+                        // Normal move
+                        if x_diff == 1 && self.y == y && color_of_new.is_none() {
+                            return true;
+                        }
+
+                        // Move 2 squares
+                        if self.x == 1
+                            && x_diff == 2
+                            && self.y == y
+                            && is_path_empty
+                            && color_of_new.is_none()
+                        {
+                            return true;
+                        }
+
+                        // Take piece
+                        if x_diff == 1 && y_diff == 1 && color_of_new == Some(PieceColor::Dark) {
+                            return true;
+                        }
+                    }
+                    PieceColor::Dark => {
+                        // Has to move forward
+                        if x >= self.x {
+                            return false;
+                        }
+                        // Normal move
+                        if x_diff == 1 && self.y == y && color_of_new.is_none() {
+                            return true;
+                        }
+
+                        // Move 2 squares
+                        if self.x == 6
+                            && x_diff == 2
+                            && self.y == y
+                            && is_path_empty
+                            && color_of_new.is_none()
+                        {
+                            return true;
+                        }
+
+                        // Take piece
+                        if x_diff == 1 && y_diff == 1 && color_of_new == Some(PieceColor::Light) {
+                            return true;
+                        }
+                    }
+                }
+                false
+            }
+        }
+    }
+}
+
+/// Returns None if the square is empty, retuns Some with the color if not
+fn color_of_square((x, y): (u8, u8), pieces: &[Piece]) -> Option<PieceColor> {
+    for piece in pieces {
+        if piece.x == x && piece.y == y {
+            return Some(piece.color);
+        }
+    }
+    None
+}
+
+fn is_path_empty(begin: (u8, u8), end: (u8, u8), pieces: &[Piece]) -> bool {
+    // Same column
+    if begin.0 == end.0 {
+        for piece in pieces {
+            if piece.x == begin.0
+                && ((piece.y > begin.1 && piece.y < end.1)
+                    || (piece.y > end.1 && piece.y < begin.1))
+            {
+                return false;
+            }
+        }
+    }
+    // Same row
+    if begin.1 == end.1 {
+        for piece in pieces {
+            if piece.y == begin.1
+                && ((piece.x > begin.0 && piece.x < end.0)
+                    || (piece.x > end.0 && piece.x < begin.0))
+            {
+                return false;
+            }
+        }
+    }
+    let x_diff = begin.0.abs_diff(end.0);
+    let y_diff = begin.1.abs_diff(end.1);
+    if x_diff == y_diff {
+        for i in 1..x_diff {
+            let pos = if begin.0 < end.0 && begin.1 < end.1 {
+                // left bottom - right top
+                (begin.0 + i as u8, begin.1 + i as u8)
+            } else if begin.0 < end.0 && begin.1 > end.1 {
+                // left top - right bottom
+                (begin.0 + i as u8, begin.1 - i as u8)
+            } else if begin.0 > end.0 && begin.1 < end.1 {
+                // right bottom - left top
+                (begin.0 - i as u8, begin.1 + i as u8)
+            } else {
+                // right top - left bottom
+                (begin.0 - i as u8, begin.1 - i as u8)
+            };
+            if color_of_square(pos, pieces).is_some() {
+                return false;
+            }
+        }
+    }
+
+    true
+}

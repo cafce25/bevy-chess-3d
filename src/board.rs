@@ -16,7 +16,7 @@ pub fn create_board(
             commands
                 .spawn_bundle(PbrBundle {
                     mesh: mesh.clone(),
-                    material: if square.is_light(){
+                    material: if square.is_light() {
                         materials.add(Color::rgb(1.0, 0.9, 0.9).into())
                     } else {
                         materials.add(Color::rgb(0.0, 0.1, 0.1).into())
