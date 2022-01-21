@@ -68,6 +68,7 @@ fn color_squares(
 }
 
 fn select_square(
+    mut commands: Commands,
     mouse_button_inputs: Res<Input<MouseButton>>,
     mut selected_piece: ResMut<SelectedPiece>,
     squares: Query<(&Square, &Selection)>,
@@ -78,16 +79,28 @@ fn select_square(
         return;
     }
 
-    let pieces_vec = pieces.iter().map(|(_, piece)| *piece).collect();
     // Get the selected square
     let selected_square = squares
         .iter()
         .find_map(|(square, selection)| selection.selected().then(|| square));
     if let Some(square) = selected_square {
         if let Some(selected_piece_entity) = selected_piece.entity {
+            let pieces_entity_vec: Vec<(Entity, Piece)> = pieces
+                .iter()
+                .map(|(entity, piece)| (entity, *piece))
+                .collect();
+            let pieces_vec = pieces.iter().map(|(_, piece)| *piece).collect();
             // Move the selected piece to the selected square
             if let Ok((_entity, mut piece)) = pieces.get_mut(selected_piece_entity) {
                 if piece.is_move_valid((square.x, square.y), pieces_vec) {
+                    if let Some((entity, _)) =
+                        pieces_entity_vec.into_iter().find(|(_, target_piece)| {
+                            target_piece.x == square.x && target_piece.y == square.y
+                        })
+                    {
+                        // Despawn piece and it's children
+                        commands.entity(entity).despawn_recursive();
+                    }
                     piece.x = square.x;
                     piece.y = square.y;
                 }
