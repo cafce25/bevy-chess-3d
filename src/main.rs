@@ -3,6 +3,7 @@ use bevy_mod_picking::{
     DebugCursorPickingPlugin, DefaultPickingPlugins, Hover, PickingCameraBundle, Selection,
 };
 use board::Square;
+use pieces::{Piece, PiecesPlugin};
 
 mod board;
 mod pieces;
@@ -11,6 +12,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(DefaultPickingPlugins)
         .add_plugin(DebugCursorPickingPlugin)
+        .add_plugin(PiecesPlugin)
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(WindowDescriptor {
             title: "Chess!".to_string(),
@@ -18,10 +20,11 @@ fn main() {
             height: 1600.,
             ..Default::default()
         })
+        .init_resource::<SelectedPiece>()
         .add_startup_system(setup)
         .add_startup_system(board::create_board)
-        .add_startup_system(pieces::create_pieces)
         .add_system(color_squares)
+        .add_system(select_square)
         .run();
 }
 
@@ -62,4 +65,45 @@ fn color_squares(
             Color::rgb(0.0, 0.1, 0.1)
         };
     }
+}
+
+fn select_square(
+    mouse_button_inputs: Res<Input<MouseButton>>,
+    mut selected_piece: ResMut<SelectedPiece>,
+    squares: Query<(&Square, &Selection)>,
+    mut pieces: Query<(Entity, &mut Piece)>,
+) {
+    // Only run if the left button is pressed
+    if !mouse_button_inputs.just_pressed(MouseButton::Left) {
+        return;
+    }
+
+    // Get the selected square
+    let selected_square = squares
+        .iter()
+        .find_map(|(square, selection)| selection.selected().then(|| square));
+    if let Some(square) = selected_square {
+        if let Some(selected_piece_entity) = selected_piece.entity {
+            // Move the selected piece to the selected square
+            if let Ok((_entity, mut piece)) = pieces.get_mut(selected_piece_entity) {
+                piece.x = square.x;
+                piece.y = square.y;
+            }
+            selected_piece.entity = None;
+        } else {
+            // Select the piece in the currently selected square
+            for (piece_entity, piece) in pieces.iter() {
+                if piece.x == square.x && piece.y == square.y {
+                    // piece_entity is now the entity in the same square
+                    selected_piece.entity = Some(piece_entity);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+#[derive(Default)]
+struct SelectedPiece {
+    entity: Option<Entity>,
 }

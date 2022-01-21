@@ -1,6 +1,14 @@
 use bevy::prelude::*;
 
-pub fn create_pieces(
+pub struct PiecesPlugin;
+impl Plugin for PiecesPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_startup_system(create_pieces)
+            .add_system(move_pieces);
+    }
+}
+
+fn create_pieces(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -123,37 +131,37 @@ pub fn create_pieces(
         &mut commands,
         dark_material.clone(),
         PieceColor::Dark,
-        queen_handle.clone(),
+        queen_handle,
         (7, 3),
     );
     spawn_king(
         &mut commands,
         dark_material.clone(),
         PieceColor::Dark,
-        king_handle.clone(),
-        king_cross_handle.clone(),
+        king_handle,
+        king_cross_handle,
         (7, 4),
     );
     spawn_bishop(
         &mut commands,
         dark_material.clone(),
         PieceColor::Dark,
-        bishop_handle.clone(),
+        bishop_handle,
         (7, 5),
     );
     spawn_knight(
         &mut commands,
         dark_material.clone(),
         PieceColor::Dark,
-        knight_1_handle.clone(),
-        knight_2_handle.clone(),
+        knight_1_handle,
+        knight_2_handle,
         (7, 6),
     );
     spawn_rook(
         &mut commands,
         dark_material.clone(),
         PieceColor::Dark,
-        rook_handle.clone(),
+        rook_handle,
         (7, 7),
     );
 
@@ -165,6 +173,18 @@ pub fn create_pieces(
             pawn_handle.clone(),
             (6, i),
         );
+    }
+}
+
+fn move_pieces(time: Res<Time>, mut query: Query<(&mut Transform, &Piece)>) {
+    for (mut transform, piece) in query.iter_mut() {
+        // Get the direction to move in
+        let direction = Vec3::new(piece.x as f32, 0.0, piece.y as f32) - transform.translation;
+
+        // Only move if the piece isn't already there (distance is big)
+        if direction.length() > 0.1 {
+            transform.translation += direction.normalize() * time.delta_seconds();
+        }
     }
 }
 
