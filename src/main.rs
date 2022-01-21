@@ -1,10 +1,14 @@
 use bevy::prelude::*;
 use bevy_mod_picking::{DebugCursorPickingPlugin, DefaultPickingPlugins, PickingCameraBundle};
-use board::BoardPlugin;
-use pieces::PiecesPlugin;
 
 mod board;
 mod pieces;
+mod ui;
+
+use board::BoardPlugin;
+use pieces::PiecesPlugin;
+use ui::UiPlugin;
+
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
@@ -12,6 +16,7 @@ fn main() {
         .add_plugin(DebugCursorPickingPlugin)
         .add_plugin(PiecesPlugin)
         .add_plugin(BoardPlugin)
+        .add_plugin(UiPlugin)
         .insert_resource(Msaa { samples: 4 })
         .insert_resource(WindowDescriptor {
             title: "Chess!".to_string(),

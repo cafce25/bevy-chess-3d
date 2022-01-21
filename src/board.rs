@@ -1,4 +1,7 @@
-use bevy::{prelude::*, app::{Events, AppExit}};
+use bevy::{
+    app::{AppExit, Events},
+    prelude::*,
+};
 use bevy_mod_picking::{Hover, PickableBundle, Selection};
 
 use crate::pieces::{Piece, PieceColor, PieceType};
@@ -19,7 +22,7 @@ struct SelectedPiece {
     entity: Option<Entity>,
 }
 
-struct PlayerTurn(PieceColor);
+pub struct PlayerTurn(pub PieceColor);
 impl Default for PlayerTurn {
     fn default() -> Self {
         Self(PieceColor::Light)
