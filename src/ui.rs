@@ -31,7 +31,6 @@ fn init_next_move_text(mut commands: Commands, asset_server: ResMut<AssetServer>
                         font,
                         font_size: 40.0,
                         color: Color::rgb(0.8, 0.8, 0.8),
-                        ..Default::default()
                     },
                     TextAlignment {
                         vertical: VerticalAlign::Top,
