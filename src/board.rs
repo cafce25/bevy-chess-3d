@@ -11,6 +11,7 @@ impl Plugin for BoardPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SelectedPiece>()
             .init_resource::<PlayerTurn>()
+            .init_resource::<SquareMaterials>()
             .add_event::<ResetSelectedEvent>()
             .add_startup_system(create_board)
             .add_system(color_squares)
@@ -40,22 +41,19 @@ impl Default for PlayerTurn {
 }
 
 fn color_squares(
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    query: Query<(&Square, &Selection, &Hover, &Handle<StandardMaterial>)>,
+    materials: ResMut<SquareMaterials>,
+    mut query: Query<(&Square, &Selection, &Hover, &mut Handle<StandardMaterial>)>,
 ) {
-    for (square, selection, hover, material_handle) in query.iter() {
-        // Get the actual material
-        let material = materials.get_mut(material_handle).unwrap();
-
-        // Change the material color
-        material.base_color = if hover.hovered() {
-            Color::rgb(0.7, 0.3, 0.3)
+    for (square, selection, hover, mut material) in query.iter_mut() {
+        // Change the material
+        *material = if hover.hovered() {
+            materials.highlight_color.clone()
         } else if selection.selected() {
-            Color::rgb(0.9, 0.1, 0.1)
+            materials.selected_color.clone()
         } else if square.is_light() {
-            Color::rgb(1.0, 0.9, 0.9)
+            materials.light_color.clone()
         } else {
-            Color::rgb(0.0, 0.1, 0.1)
+            materials.dark_color.clone()
         };
     }
 }
@@ -183,7 +181,7 @@ fn despawn_taken_pieces(
 fn create_board(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    materials: ResMut<SquareMaterials>,
 ) {
     // Add meshes and materials
     let mesh = meshes.add(Mesh::from(shape::Plane { size: 1.0 }));
@@ -196,9 +194,9 @@ fn create_board(
                 .spawn_bundle(PbrBundle {
                     mesh: mesh.clone(),
                     material: if square.is_light() {
-                        materials.add(Color::rgb(1.0, 0.9, 0.9).into())
+                        materials.light_color.clone()
                     } else {
-                        materials.add(Color::rgb(0.0, 0.1, 0.1).into())
+                        materials.dark_color.clone()
                     },
                     transform: Transform::from_translation(Vec3::new(x as f32, 0.0, y as f32)),
                     ..Default::default()
@@ -224,3 +222,25 @@ impl Square {
 struct ResetSelectedEvent;
 #[derive(Component)]
 struct Taken;
+
+struct SquareMaterials {
+    highlight_color: Handle<StandardMaterial>,
+    selected_color: Handle<StandardMaterial>,
+    dark_color: Handle<StandardMaterial>,
+    light_color: Handle<StandardMaterial>,
+}
+
+impl FromWorld for SquareMaterials {
+    fn from_world(world: &mut World) -> Self {
+
+        let mut materials = world.get_resource_mut::<Assets<StandardMaterial>>().unwrap();
+            //resoucrses.get_mut::<Assets<StandardMaterial>>().unwrap();
+        SquareMaterials {
+            highlight_color: materials.add(Color::rgb(0.8, 0.3, 0.3).into()),
+            selected_color: materials.add(Color::rgb(0.9, 0.1, 0.1).into()),
+            dark_color: materials.add(Color::rgb(0.0, 0.1, 0.1).into()),
+            light_color: materials.add(Color::rgb(1.0, 0.9, 0.9).into()),
+        }
+    }
+}
+
